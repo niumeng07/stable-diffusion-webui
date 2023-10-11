@@ -13,7 +13,6 @@ __pycache__
 /GFPGANv1.3.pth
 /gfpgan/weights/*.pth
 /ui-config.json
-/outputs
 /config.json
 /log
 /webui.settings.bat
@@ -38,7 +37,10 @@ notification.mp3
 /node_modules
 /package-lock.json
 /.coverage*
+<<<<<<< HEAD
 /test/test_outputs
 /cache
 trace.json
 /sysinfo-????-??-??-??-??.json
+*.swp
+.DS_Store
