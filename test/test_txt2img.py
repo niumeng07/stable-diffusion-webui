@@ -4,6 +4,20 @@ import requests
 import base64
 from datetime import datetime
 import json
+import argparse
+
+
+parser = argparse.ArgumentParser(
+                    prog='ProgramName',
+                    description='What the program does',
+                    epilog='Text at the bottom of help')
+
+parser.add_argument('--config_file', default='test/config.json')           # positional argument
+parser.add_argument('--model_name', default=None)
+
+args = parser.parse_args()
+
+simple_txt2img_request = json.load(open(args.config_file, 'r'))
 
 
 @pytest.fixture()
@@ -11,50 +25,7 @@ def url_txt2img(base_url):
     return f"{base_url}/sdapi/v1/txt2img"
 
 
-@pytest.fixture()
-def simple_txt2img_request():
-    return {
-        "batch_size": 1,
-        "cfg_scale": 7,
-        "denoising_strength": 0,
-        "enable_hr": False,
-        "eta": 0,
-        "firstphase_height": 0,
-        "firstphase_width": 0,
-        "height": 64,
-        "n_iter": 1,
-        "negative_prompt": "",
-        "prompt": "example prompt",
-        "restore_faces": False,
-        "s_churn": 0,
-        "s_noise": 1,
-        "s_tmax": 0,
-        "s_tmin": 0,
-        "sampler_index": "Euler a",
-        "seed": -1,
-        "seed_resize_from_h": -1,
-        "seed_resize_from_w": -1,
-        "steps": 3,
-        "styles": [],
-        "subseed": -1,
-        "subseed_strength": 0,
-        "tiling": False,
-        "width": 64,
-    }
-
-
-simple_txt2img_request2 = {
-        "batch_size": 1, "cfg_scale": 9, "denoising_strength": 0, "enable_hr": False, "eta": 0, "firstphase_height": 0,
-        "firstphase_width": 0, "height": 1824, "n_iter": 1,
-        "negative_prompt": "BadDream, (UnrealisticDream:1.3)",
-        "prompt": "(masterpiece), (extremely intricate:1.3), (realistic), portrait of a girl, the most beautiful in the world, (medieval armor), metal reflections, upper body, outdoors, intense sunlight, far away castle, professional photograph of a stunning woman detailed, sharp focus, dramatic, award winning, cinematic lighting, octane render unreal engine, volumetrics dtx, (film grain, blurry background, blurry foreground, bokeh, depth of field, sunset, motion blur:1.3), chainmail",
-        "restore_faces": False,
-        "s_churn": 0, "s_noise": 1, "s_tmax": 0, "s_tmin": 0, "sampler_index": "DPM++ SDE Karras", "seed": 5775713, "seed_resize_from_h": -1,
-        "seed_resize_from_w": -1, "steps": 30, "styles": [], "subseed": -1, "subseed_strength": 0, "tiling": False, "width": 1120,
-        }
-
-
-def save_image_with_info(response, save_path="outputs/txt2img-images/{}/{}_{}.{}"):
+def save_image_with_info(response, simple_txt2img_request, save_path="outputs/txt2img-images/{}/{}_{}.{}"):
     response = response.json()
     images = response['images']
     info = (response['info'])
@@ -70,10 +41,14 @@ def save_image_with_info(response, save_path="outputs/txt2img-images/{}/{}_{}.{}
         with open(image_info_name, "w") as outfile:
             outfile.write(json.dumps(response, indent=4))
 
+        config_dump_file = save_path.format(date, timestamp, idx, 'config.json')
+        with open(config_dump_file, "w") as outfile:
+            outfile.write(json.dumps(simple_txt2img_request, indent=4))
+
 def test_txt2img_simple_performed(url_txt2img, simple_txt2img_request):
     response = requests.post(url_txt2img, json=simple_txt2img_request)
     assert response.status_code == 200
-    save_image_with_info(response)
+    save_image_with_info(response, simple_txt2img_request)
 
 
 def test_txt2img_with_negative_prompt_performed(url_txt2img, simple_txt2img_request):
@@ -125,5 +100,5 @@ def test_txt2img_batch_performed(url_txt2img, simple_txt2img_request):
 
 
 
-
-test_txt2img_simple_performed("http://127.0.0.1:7861/sdapi/v1/txt2img", simple_txt2img_request2)
+if __name__ == '__main__':
+    test_txt2img_simple_performed("http://127.0.0.1:7861/sdapi/v1/txt2img", simple_txt2img_request)
